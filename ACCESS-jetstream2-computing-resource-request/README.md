@@ -57,7 +57,7 @@ Then submitted the form.
 Once approved, and logged in, needed this page (https://allocations.access-ci.org/requests) in order to transfer ACCESS credits to a specific resource. For the appropriate allocation/Project, selected "Credits + Resources", then the text box that initially says "Add a resource to your exchange...", then selected "Indiana Jetstream2 CPU", then entered 196,000 (since I did this before the other 200,000 were available). Then for "Indiana Jetstream2 Storage" added the remaining 4,000, giving 4 TB of shared storage to use.
 After the other 200,000 are made available, repeat the process without adding anymore to Storage.
 
-### Requesting quota-limit increases so we can run up to 60 instances concurrently
+### Requesting quota-limit increases so we can run up to 60 instances concurrently, and requesting Manila (for shared volume)
 The allocation comes with a limit on the number of concurrent instances that can be run. I submitted a request when logged into Jetstream2 here: https://jetstream2.exosphere.app/exosphere/getsupport
 
 This is the text I submitted (after selecting the radio dial for “An Allocation”):
@@ -67,6 +67,8 @@ This is the text I submitted (after selecting the radio dial for “An Allocatio
 > We plan to use this allocation (BIO240064) with 60 concurrent m3.large instances for a bioinformatics course we are running. The starting limit is set to 10.
 > 
 > Could you please help with increasing the allotted quotas so that we will be able to run up to 60 m3.large instances concurrently on this allocation, including cores, ram, volume, ports, available IP addresses, and whatever other magic you folks take care of that I'm naive to?
+>
+> We would also like to be able to use the 4 TB we specified for Jetstream2 Storage as a shared volume attached to all instances. We've done this with Manila in the past. Could you please enable that for us?
 >
 > Thank you for any help!  
 > -Mike
