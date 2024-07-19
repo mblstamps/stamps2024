@@ -1,0 +1,13 @@
+"Sample"	"Location"	"Month"	"Season"	"Type"	"Acidobacteria"	"Actinobacteria"	"Bacteroidetes"	"Chlamydiae"	"Chlorobi"	"Chloroflexi"	"Cyanobacteria"	"Deferribacteres"	"Deinococcus-Thermus"	"Firmicutes"	"Fusobacteria"	"Lentisphaerae"	"OD1"	"OP8"	"Planctomycetes"	"Proteobacteria"	"Spirochaetes"	"TG-1"	"TM6"	"TM7"	"Tenericutes"	"Verrucomicrobia"	"phylum_NA"
+"JPA_Jan"	"Jones-Palmer Ave"	"Jan"	"Winter"	"Outfall"	27	273	94	92	0	0	0	0	0	71	0	0	0	0	19	18843	0	68	0	36	0	0	1924
+"JPA_Feb"	"Jones-Palmer Ave"	"Feb"	"Winter"	"Outfall"	7	113	1064	11	0	0	23	0	0	26	0	0	0	0	13	12987	0	21	19	0	0	29	42
+"JPA_May"	"Jones-Palmer Ave"	"May"	"Summer"	"Outfall"	0	57	70	36	0	2	107	0	2	59	0	0	0	0	54	2226	0	0	56	0	1	40	10
+"JPA_Jun"	"Jones-Palmer Ave"	"Jun"	"Summer"	"Outfall"	0	369	3985	0	0	0	1746	0	0	85	7	0	0	3	6	12686	0	0	2	0	0	0	1
+"LOP_Jan"	"Long Pond"	"Jan"	"Winter"	"Reservoir"	4	22	238	21	0	0	8	0	0	9	0	0	0	0	8	8823	0	37	0	0	0	6	2975
+"LOP_Feb"	"Long Pond"	"Feb"	"Winter"	"Reservoir"	17	40	351	100	0	0	22	0	0	80	0	8	0	0	97	17033	0	85	32	16	0	0	54
+"LOP_Jun"	"Long Pond"	"Jun"	"Summer"	"Reservoir"	0	94	162	0	0	0	5557	0	0	275	0	0	0	0	14	2606	0	0	0	0	0	2	0
+"LOP_Jul"	"Long Pond"	"Jul"	"Summer"	"Reservoir"	0	155	125	0	0	0	20	0	1	119	0	0	0	0	28	3892	0	0	0	0	0	6	0
+"MBL_Jan"	"MBL"	"Jan"	"Winter"	"Outfall"	3	34	118	19	1	0	80	0	1	37	0	3	1	0	43	9624	0	41	0	0	0	6	6
+"MBL_Feb"	"MBL"	"Feb"	"Winter"	"Outfall"	20	104	336	60	5	2	361	0	0	79	3	0	0	0	317	26325	0	128	2	0	0	57	7
+"MBL_Jun"	"MBL"	"Jun"	"Summer"	"Outfall"	0	289	183	0	0	4	4116	0	0	863	0	0	0	0	489	9532	0	0	0	0	0	0	1
+"MBL_Aug"	"MBL"	"Aug"	"Summer"	"Outfall"	17	151	1019	37	0	373	507	43	0	97	9	0	0	0	650	7226	163	0	0	0	0	0	730

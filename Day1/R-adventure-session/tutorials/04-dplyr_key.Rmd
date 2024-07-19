@@ -1,0 +1,249 @@
+---
+title: "04-dplyr"
+author: "Maria Valdez C."
+date: "2024-07-15"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this tutorial, we will go through how to manipulate data frames through the `dplyr` package. In previous tutorials, you learned how to load data into R as a data frame object. This tutorial focuses on modifying the data frames with the objective to clean and reorganize our data before analysis. 
+
+## Lesson 4 - dplyr and Tidyverse
+
+Tidyverse is a suite of powerful and cohesive R packages. The  `dplyr` package is part of this suite and has commands for common data manipulation. In this tutorial, we will overview the basics of using `dplyr`. 
+
+## Installation 
+
+You can load the whole tidyverse suite like this,
+
+```{r}
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+     install.packages("tidyverse")
+}
+library(tidyverse)
+```
+
+but optionally, you can individually install and load dplyr (or any other in the suite such as ggplot)
+
+```{r}
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+     install.packages("dplyr")
+}
+library(dplyr)
+```
+
+Installing individual packages may increase loading speed and I personally prefer it, but any option is valid! 
+
+## dplyr commands
+
+The dplyr commands designed for data manipulation operations are: 
+
+`select()` picks variables (think columns) based on their names.
+`filter()` picks cases based on their values (think finding particular rows).
+`arrange()` changes the ordering of the rows.
+`relocate()` changes the order of columns.
+`mutate()` adds new variables that are functions of existing variables
+`summarise()` reduces multiple values down to a single summary.
+
+There is another command `group_by()`,  which allows you to perform any of the above operation “by group”, where groups are defined as all rows that have the same value for a certain variable (column). 
+
+## Preparing for some exercises 
+
+We are going to load the data set “phylum_data.txt”, which combines microbiome counts and covariates from some water samples around Woods hole (it combines `covariates` and some of the rows in `otus` data sets from previous tutorials). 
+
+Recall that we load our tables using `read.csv`: 
+
+```{r}
+phylum_data <- read.csv("data/phylum_data.txt", sep = "\t", row.names = 1, header = T)
+```
+
+## Select and Filter commands
+
+How many variables (columns) you see in your Data? Which of these are actually of use in your analysis? How many samples (rows) were taken in the month of January? 
+
+`select()` and `filter()` are the commands that allow you to manipulate your data to retain only the information necessary to answer these questions. `select()` allows you to keep only those columns that you are interested in exploring, from all
+
+```{r}
+names(phylum_data)
+```
+
+Meanwhile, `filter()` allows you to select the rows of interest by some criterion. 
+
+**Example of select:**
+
+The following function is use to subset the data frame `phylum_data`, keeping only the columns indicating afterwards (Location, Month, Acidobacteria, Chlamydiae):
+
+```{r}
+select(phylum_data, Location, Month, Acidobacteria, Chlamydiae)
+```
+
+You can use select with `contains()` or `starts_with()` if appropriate. `contains()` will include all column names that contain a substring, while `starts_with()` will include all column names that start with the given substring. Careful not to exclude variables without intention. 
+
+The following code preserves all taxa with bacteria in the name:
+
+```{r}
+select(phylum_data, Location, Month, contains("bacteria"))
+```
+
+
+**Example of filter:**
+
+Filter will subset the data frame by keeping all rows for which the criteria (given as a logical expression) is true. 
+
+The following code keeps only the rows for which the row is equal to "Jan".
+
+```{r}
+filter(phylum_data, Month == "Jan")
+Jan_phylum_data <- filter(phylum_data, Month == "Jan")
+```
+
+Criteria can be combined into one. In this case `|` is a logical or, and `&` is a logical and:
+
+```{r}
+filter(phylum_data, Month == "Jan" | Month == "Feb")
+```
+
+## Exercise
+
+Build a new table (saving the changes), containing "Location", "Season", and all taxa whose name starts with "Ch", while preserving only the rows where type is "Outfall".
+
+```{r}
+  Temporary_phylum_data <- filter(phylum_data, Type == "Outfall")
+
+  Ch_phylum_data <- select(Temporary_phylum_data, Location, Season, starts_with("Ch"))
+  
+  Ch_phylum_data
+```
+
+Tip: Since "Type" is not in the columns to be kept, you must perform filter before select.
+
+## Piping!
+
+Some of you may already know this, but for those of you who don't: How tedious was the previous exercise? Did you save one table for filter and then another for select?
+
+Piping lets you state the first argument (the name of the table) before the command, and "pipe in" the data using the symbol %>% like this:
+
+```{r}
+phylum_data %>% 
+  select(Location, Month, Acidobacteria, Chlamydiae)
+```
+
+so you can do multiple commands and save all of them:
+
+```{r}
+ Jan_phylum_data <- phylum_data %>% 
+  select(Location, Month, Acidobacteria, Chlamydiae) %>%
+  filter(Month == "Jan")
+
+  Jan_phylum_data
+```
+
+Repeat previous exercise with piping! (does the order of operations still matter? Explore!)
+
+**note:** the following code should fail to run
+```{r}
+  #The order of operations does matter. This code will fail: 
+  Ch_phylum_data <- phylum_data %>% 
+    select(Location, Season, starts_with("Ch")) %>%
+    filter(Type == "Outfall")
+```
+
+```{r}
+  #The order of operations does matter. This code will fail: 
+  Ch_phylum_data <- phylum_data %>% 
+    filter(Type == "Outfall") %>%
+    select(Location, Season, starts_with("Ch"))
+
+  Ch_phylum_data
+```
+
+## rename and relocate
+
+The last column in our data set is called "phylum_NA", showing it is probably counts for taxa that we do not recognize. We could change the name to a more descriptive name such as "unknown". We do this in dplyr by using `rename()`
+
+```{r}
+  phylum_data %>% 
+    rename(unknown = phylum_NA)
+```
+
+Relocating columns is also possible. For example, if we are interested in directly comparing the counts of unknown organisms against the covariates in our exploration, rather than having to go at the very end of the table, we may apply
+
+```{r}
+  phylum_data %>% 
+    rename(unknown = phylum_NA) %>%
+    relocate(unknown, .after = Type)
+```
+
+In relocate, ".before" indicates "the columns should come before ...", and ".after" indicates "the columns should come after ...".
+
+## mutate & arrange
+
+`mutate()` is used to create new columns. As an example, imagine we want the log counts of Actinobacteria. We can create a modified data frame with a new column named "log_Actinobateria" (we are also using relocate to put log_Actinobacteria right after Actinobacteria):
+
+```{r}
+phylum_data %>%
+  mutate(log_Actinobacteria = log(Actinobacteria)) %>% 
+  relocate(log_Actinobacteria, .after = Actinobacteria)
+```
+`arrange()` is used to order the entries of the dataset depending on the values on one variable. Considering Actinobacteria again, you may want to have it ordered by counts. You can do this from small to large, or employ the extra command "desc" to do it from large to small: 
+
+```{r}
+phylum_data %>%
+  arrange(Actinobacteria)
+```
+
+
+```{r}
+phylum_data %>%
+  arrange(desc(Actinobacteria))
+```
+
+## Exercise
+
+With all you have learned, create a new data frame in which you maintain only the covariates and the Acidobacteria column. For this taxon, you preserve only the positive counts (discard zero values), and obtain the log counts. Order in decreasing order on these counts. Anything you note with the seasons?
+
+```{r}
+Acidobacteria_data <- phylum_data %>%
+  select(Location, Month, Season, Type, Acidobacteria) %>%
+  filter(Acidobacteria > 0) %>%
+  mutate(log_Acidobacteria = log(Acidobacteria)) %>%
+  arrange(desc(Acidobacteria))
+
+Acidobacteria_data
+```
+
+## group by and summarize
+`group_by()` allows you to define groups within the data set based on specific variables. Grouping the data is often a precursor to performing summary operations on the grouped data, like summarize. 
+
+The `summarize()` function is used to calculate summary statistics or perform other operations on grouped data. It allows you to specify various summarization functions (e.g., `mean()`, `sum()`, `max()` or custom functions) to apply to a specific variable for each group. The result is a new summarized data set where each row represents a group and each column contains the summarized values.
+
+The function `group_by()` define a category. Then we're using summarize to calculate the sum, _by group_. 
+
+Returning to our example, say instead we want to total counts of Acidobacteria in Winter vs in Summer. We can obtain this by
+```{r}
+phylum_data %>%
+  group_by(Season) %>% 
+  summarize(Acidobacteria = sum(Acidobacteria))
+```
+
+`group_by()` admits more than one variable. 
+
+##Challenge exercise 
+
+Create a new data frame, finding the log counts of "Chlamydiae" by Location and Season, not including zero counts.
+
+````{r}
+New_data <- phylum_data %>%
+  group_by(Location,Season) %>%
+  summarize(Chlamydiae = sum(Chlamydiae)) %>%
+  filter(Chlamydiae > 0) %>%
+  mutate(log_Chlamydiae = log(Chlamydiae))
+
+New_data
+```
+

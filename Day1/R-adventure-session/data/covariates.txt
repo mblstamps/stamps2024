@@ -1,0 +1,13 @@
+SampleName	Location	Month	Season	Type
+JPA_Jan	Jones-Palmer Ave	Jan	Winter	Outfall
+JPA_Feb	Jones-Palmer Ave	Feb	Winter	Outfall
+JPA_May	Jones-Palmer Ave	May	Summer	Outfall
+JPA_Jun	Jones-Palmer Ave	Jun	Summer	Outfall
+LOP_Jan	Long Pond	Jan	Winter	Reservoir
+LOP_Feb	Long Pond	Feb	Winter	Reservoir
+LOP_Jun	Long Pond	Jun	Summer	Reservoir
+LOP_Jul	Long Pond	Jul	Summer	Reservoir
+MBL_Jan	MBL	Jan	Winter	Outfall
+MBL_Feb	MBL	Feb	Winter	Outfall
+MBL_Jun	MBL	Jun	Summer	Outfall
+MBL_Aug	MBL	Aug	Summer	Outfall

@@ -1,0 +1,103 @@
+---
+title: "02: Functions"
+author: "Sarah Teichman"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this tutorial, we will go through using and writing functions in R. In the previous tutorial we loaded our data and learned about different components of it. If you skipped that tutorial, load the data with the code below. 
+
+```{r}
+covariates <- read.csv("data/covariates.txt", sep = "\t")
+otus <- read.csv("data/otus.txt", sep = "\t", row.names = 1, header = T)
+```
+
+## Using functions in R
+
+**Note: ** some of the examples in this tutorial are designed to not run properly/return error. Do not panic if this happens
+
+Recall that base R gives us the ability to perform basic tasks and that we can install and load other packages to perform a wide variety of other tasks. These tasks are primarily performed using functions. A function is a script that performs a certain task with input specified by the user. You've already been using functions in the previous tutorial. 
+
+```{r}
+vec <- 1:10
+vec
+length(vec)
+```
+
+`length()` is a function that takes in a vector as an argument and returns the length of that vector. 
+
+```{r}
+head(covariates)
+head(covariates, 10)
+```
+
+What is the difference between these two uses of the `head()` function? 
+
+In the second line we added another argument with the value 10. This argument tells us how many observations to include in the output to `head()`. 
+
+```{r, eval = FALSE}
+head(10, covariates)
+```
+```{r}
+head(n = 10, x = covariates)
+```
+
+Why does `head(10, covariates)` produce an error while `head(n = 10, x = covariates)` does not? This is a great time to check out the documentation for the `head()` function! 
+
+```{r}
+?head
+```
+
+Each function has its own arguments which can be found in its documentation. Arguments have expected orders (`head()` expects to receive first the object to take the initial values from, then the number of objects). This order can be overridden by using argument names. Some arguments are required (such as the object `x` for `head()`) and some arguments are optional (such as `n` for `head()`). 
+
+Exercise: Use the documentation to use the function `sort()` to sort the counts in the "JPA_JAN" column of `otus` from highest to lowest. 
+
+```{r}
+sort(otus$JPA_Jan, decreasing = TRUE)
+``` 
+
+## Writing functions in R
+
+Sometimes the exact function we want won't exist in any packages. In this case we can write our own. Let's write a function below to do the same task that `head()` does. We'll call it `top()`. 
+
+```{r}
+top <- function(data, lines = 6) {
+  sm_data <- data[1:lines, ]
+  return(sm_data)
+}
+```
+
+The object that we assign the function to is the name that we will call when we want to run the function. The values in parentheses after the call to `function()` are the arguments to our function. Here we specify that `data` is a required argument and `lines` is an optional argument. If not specified by the user it will default to 6. 
+
+The body of the function is enclosed in curly braces. At the end of the function we have a `return()` statement. This is the value that will be sent back to the user when they run the `top()` function.
+
+```{r}
+head(covariates)
+top(covariates)
+```
+
+Exercise: Fill in missing elements of the function below to calculate the relative abundances from a specific sample in `otus` (note that samples are represented by columns). The user will specify the sample they want with the index of that column. Each "___" should be filled in with the correct code.
+
+```{r, eval = FALSE}
+compute_rel_abund <- function(index) { # add a required argument named "index" 
+  
+  index_abund <- otus[, index] # use the argument index to choose the appropriate column of the otus dataset
+  
+  index_tot <- sum(index_abund) # use the correct function to get the total counts for the column of abundances 
+  
+  index_rel <- index_abund / index_tot
+  
+  return(index_rel) # send the correct value back to the user
+}
+```
+
+Now check that your function works by running it on a the 3rd column of `otus`. Make sure that the result sums to 1!
+
+```{r, eval = FALSE}
+rel_abund <- compute_rel_abund(3)
+rel_abund
+sum(rel_abund)
+```

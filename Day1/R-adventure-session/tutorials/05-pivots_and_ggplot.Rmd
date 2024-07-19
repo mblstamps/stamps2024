@@ -1,0 +1,263 @@
+---
+title: '05: pivots and plotting with ggplot'
+author: "Shirley Mathur"
+date: "2024-07-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+First, let's load the `tidyverse` package and read in our data. For this tutorial,
+we will be working with the `phylum_data` dataset, which has the counts for all taxa
+across the samples taken from different locations along with the metadata describing
+the samples.
+```{r}
+library(tidyverse)
+
+phylum_data <- read_tsv("data/phylum_data.txt")
+```
+
+
+
+## Pivots
+Pivoting lets you reorganize the structure of your data by rearranging columns and rows. This can be crutial to getting data in the right format for plotting. (you might be familiar with this concept from excel, or `melt` in python)
+
+You can pivot data wide or long. Wide data has more columns, and there is some type of data stored in the column names (e.g. sample, year, location). Long data has fewer columns, and the data that used to be part of the column names is now stored in a category column, with the values along side it. 
+
+
+The `pivot_wider()` function in R is used to transform data from a longer format to a wider format, allowing you to spread values across multiple columns based on a key-value pair. Conversely, the `pivot_longer()` function is used to transform data from a wider format to a longer format, where multiple columns are combined into key-value pairs, providing a more compact representation of the data.
+
+Let's try this with our table. Recall the column names:
+```{r}
+names(phylum_data)
+```
+Notice that many of the column names are taxa names. We can pivot the data longer, by creating a column called "taxa", and storing the count data in a column along side ("count").
+
+```{r}
+phylum_data_long <- phylum_data %>% 
+  pivot_longer(
+    !c(Sample, Location, Month, Season, Type), #pivot all the rows except for the sample metadata
+    names_to = "taxa", values_to = "count"
+  )
+phylum_data_long
+```
+
+We can recover our original table by pivoting wider by taxa again, as shown below.
+```{r}
+phylum_data_long %>% pivot_wider(names_from = taxa, values_from = count)
+```
+
+
+
+## Into to Plotting 
+Now, we will delve deeper into plotting with ggplot2.
+ 
+ggplot2 (commonly just referred to as just ggplot) is a R package used to make high quality plots for your data. 
+*ggplot2 is part of the tidyverse suite!*
+It offers consistent syntax and allows for detailed customization of almost every element of your plots. Visualization options range from bargraphs, boxplots, scatterplots, pie charts, histograms and more. 
+
+First, we will summarise the sum of counts for each taxa across all of our samples using 
+the functions we learned from the `dplyr` tutorial.
+
+
+```{r}
+phylum_summary <- phylum_data_long %>%
+  group_by(taxa, Location, Season) %>%
+  summarise(count = sum(count))
+```
+
+
+Now, let's take our summarized taxa counts dataframe and make a plot!
+
+First, let's look up the help documentation for `ggplot` to see what information
+it needs from us to make a plot.
+
+```{r}
+help(ggplot)
+```
+
+We can note that the two required arguments are `data` and `mapping`.
+
+We will start by using the `ggplot`function to make a plot, and setting the `data`argument
+equal to our data, `phylum_summary`, and then set the `mapping` argument 
+to be equal to the `aes(x = taxa, y = count)` to specify the aesthetics of our plot,
+in particular that we want the taxa labels on the x-axis and their summarised counts on the y-axis.
+
+The below code will create a plot that has no data on it, but just the aesthetics that
+we specified.
+
+```{r}
+ggplot(phylum_summary, aes(x = taxa, y = count)) 
+```
+
+We can note that the above code is equivalent to:
+```{r}
+phylum_summary %>% ggplot(aes(x = taxa, y = count)) 
+```
+
+Now, say we want to make a scatter plot of our taxa counts. This is about the simplest
+plot we can make with ggplot.
+
+To do this, we will add a layer to our plot for a scatter plot, which is the
+`geom_point()` layer.
+
+
+```{r}
+ggplot(phylum_summary, aes(x = taxa, y = count)) + 
+  geom_point()
+```
+
+However, this plot is perhaps not the best way to show our data, as we are interested in plotting
+the summary of the counts. We could try using a bar plot instead.
+
+For a bar plot, we will now add a `geom_col()` layer instead of the point layer.
+
+```{r}
+ggplot(phylum_summary, aes(x = taxa, y = count)) +
+  geom_col()
+```
+We can note that the above code is equivalent to:
+```{r}
+phylum_summary %>% ggplot(aes(x = taxa, y = count)) +
+  geom_col()
+```
+We will typically see the second code, in which we used the pipe (`%>%`) function to pipe
+our data in ggplot used more often. We will demonstrate below the utility of using the pipe
+function into ggplot.
+
+Comparing the bar plot to the scatter plot, you may be wondering why in the scatter plot, we had 6 different points for each taxa, and in the barplot, we only have one bar for each taxa. 
+This is because as we have multiple rows with the same value for `taxa`, their counts are being added up to make the bars. 
+
+We can note this is happening by summarising our data just by taxa, and then plotting a bar plot.
+
+This is a great place for us to pipe our data into ggplot, because we can then do this additional summarising through use of a `dplyr` pipeline, and pipe that directly into ggplot without having to 
+make another data table to make this plot!
+
+```{r}
+phylum_summary %>%
+  group_by(taxa) %>%
+  summarise(count = sum(count)) %>%
+  ggplot(aes(x = taxa, y = count)) +
+  geom_col()
+```
+ Observing the plot above, we can see that it is the same as our earlier plot from the 
+ data that summarised across seasons and locations.
+ 
+
+Now, the x-axis above is a bit muddled and difficult to read.
+
+Let's clean this up a little bit - we can fix those axis labels like this:
+```{r}
+phylum_summary %>% 
+  ggplot(aes(x = taxa, y = count)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + #hjust sets the alignment of the text.
+  geom_col()
+```
+
+Now, we can add meaningful axes labels and a title by adding a `labs` layer that 
+specifices what labels we want to add to our plot for the axes.
+```{r}
+phylum_summary %>% 
+  ggplot(aes(x = taxa, y = count)) +
+  geom_col()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  labs(title = "Counts of Taxa", x = "Taxa", y = "Count")
+```
+
+Now, we'll add another aesthetic, fill, which will let us fill in the bar color by a variable of interest. 
+Here, we are adding a fill by location.
+```{r}
+phylum_summary %>% 
+  ggplot(aes(x = taxa, y = count, fill = Location)) +
+  geom_col()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ 
+  labs(title = "Counts of Taxa", x = "Taxa", y = "Count")
+```
+We can note now that each of the bars are segmented by color, where the color is showing
+how much of a particular taxa's counts are coming from which location.
+
+In practice however, it might not be particularly useful to just have a color-coded
+segmented bar chart as shown above. Instead, we might want to create plots for how the
+counts vary across different values of the season and location covariates.
+
+We can accomplish  this by adding a `facet` layer to our plot, and specify which variables we want to facet across.
+
+Noting that we have three different locations, and the same taxa on our x-axis for each location,
+we specified in the `facet_wrap` function that we want three rows of plots, and this implicitly
+allows us to share the x-axis across all the plots.
+
+```{r}
+phylum_summary %>% 
+  filter(Season == "Winter") %>%
+  ggplot(aes(x = taxa, y = count, fill = Location)) +
+  geom_col()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  facet_wrap(~Location) +
+  labs(title = "Counts of Taxa", x = "Taxa", y = "Count")
+```
+In the plot above, we can now see how the total taxa counts vary across the different locations.
+
+
+Now, it is time for you to practice!
+
+### Practice 1
+Fill in the code below to make a facet plot that plots the counts across different combinations
+of seasons and locations, and so that you have the different locations across the rows and different
+seasons across the columns.
+
+(Hint: edit the facet formula to facet across seasons and location)
+
+*Note: here, we are now using the `facet_grid` function rather than `facet_wrap`.
+This function is more useful when you want to facet across combinations of two variables,
+whereas `facet_wrap` is better when you have one variable to facet across and you want to specify
+how many rows, columns you want in your faceted plot.
+
+
+```{r, eval=FALSE}
+phylum_summary %>% 
+  ggplot(aes(x = taxa, y = count, fill = Location)) +
+  geom_col()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  facet_grid(_____ ~ _____) +
+  labs(title = "Counts of Taxa", x = "Taxa", y = "Count")
+```
+
+# Practice 2
+Earlier, we were looking at raw counts across different covariate values and plotting 
+them using bar plots. 
+
+However, we might be interested in how different different taxa's counts change together.
+In particular, let's say we are interested in seeing how Cyanobacteria and Proteobacteria
+counts vary together. This is a setting where a scatterplot would be more useful.
+
+Use your `ggplot` skills to make this scatter plot using the `phylum_data` table.
+
+(Hint: pipe the data into ggplot, set appropriate x and y aesthetics, and add an 
+appropriate plotting layer to make a scatterplot)
+
+```{r}
+
+```
+
+
+
+### Bonus Challenge 
+Now, instead of just plotting raw counts, we might be interested in seeing how the
+relative abundances of Proteobacteria and Cyanobacteria vary together across the samples.
+
+Here's some guidance for how to accomplish this task.
+
+1. Use your `dplyr` skills to get relative abundances from the `phylum_data_long` table.
+
+2. From the material earlier in this lesson, pivot the data wider to get the taxa as columns.
+
+3. Make the scatterplot of how the relative abundances vary with one another for
+Proteobacteria and Cyanobacteria.
+
+```{r}
+
+```
+
+

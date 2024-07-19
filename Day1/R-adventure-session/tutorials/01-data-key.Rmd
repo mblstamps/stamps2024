@@ -1,0 +1,212 @@
+---
+title: "01: Data in R"
+author: "Sarah Teichman"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this tutorial, we will go through working with data in R. We will see how to load data, how to "meet" a dataset, and break down the basic data types in R. 
+
+## File preparation 
+
+Before we load in our data, we need to make sure that we are in the correct working directory. Use the Files pane to locate the "intro_R" folder that you have opened from your zip file. 
+
+Now, check your working directory by running `getwd()` in your console. Change your working directory to the "intro_R" folder with `setwd()` (also in your console). For example, if the output to `getwd()` is "/Users/you/Documents", you should run `setwd("intro_R")`. However, if you have saved your "intro_R" folder in a sub-folder of "Documents" called "STAMPS, you would run `setwd("STAMPS/intro_R")`. Check you're in the current folder by running `getwd()` again. Make sure appropriate folders "data" and "figures" are in the "intro_R" to access the documents neccessary for this and other tutorials. 
+
+## Reading in data 
+
+Now that we are in the right working directory, we can read in the data. 
+
+```{r}
+covariates <- read.csv("data/covariates.txt", sep = "\t")
+otus <- read.csv("data/otus.txt", sep = "\t", row.names = 1, header = T)
+```
+
+Once you have run the code above, you will see a difference in your environment. You should now have two new objects in your environment. You can see that `otus` has 387 observations of 12 variables and `covariates` has 12 observations of 5 variables. What happens when you click on `otus` object in the environment? 
+
+## "Meeting" your data 
+
+The first thing to do after loading in data is to get a feel for it. How much data do you have? How is it organized? What are the observations and what are the variables? 
+
+If you want to know the dimension of your data without looking at the environment, you can use the function `dim()`. This will return two values, the number of rows and number of columns respectively. 
+
+```{r}
+dim(covariates)
+dim(otus)
+
+# we could also just get the number of rows or columns
+nrow(covariates)
+ncol(covariates)
+```
+
+Now that we know how big our data is, we may want to know what variables it contains. The function `names()` will give us variable names. The function `row.names()` will give us row names (if they exist). 
+
+```{r}
+# variable names
+names(covariates)
+names(otus)
+
+# row names
+row.names(covariates)
+# there are a lot of row names, we'll just look at the first 5
+row.names(otus)[1:5] 
+```
+
+Finally, we may want to take a look at the first few rows of the data to see how it is organized. We can do this with the function `head()`. 
+
+```{r}
+head(covariates)
+head(otus)
+```
+
+Exercise: From what you've seen above, give a guess of what is in the `covariates` dataset.
+
+Here you might note that data appears to be collected from several locations across several timepoints, or make any other observations about the data. 
+
+Exercise: Give a guess of what is in the `otus` dataset. 
+
+Here you might note that this table gives counts of taxa for a set of samples. 
+
+Exercise: How are these datasets related to each other? 
+
+Here you might note that the samples in the `SampleName` column of `covariates` are the same as the column names of the `otus` table.
+
+## The components of a dataset 
+
+The most basic object in R is a single value. This could be a number, a character (quotes must be used to define a character object), a logical value (TRUE or FALSE), or other data types that we won't discuss today. 
+
+```{r}
+x <- 5
+# check the class (data type) of x
+class(x)
+y <- "hello"
+# check the class of y
+class(y)
+z <- TRUE
+class(z)
+```
+
+Values can be organized into vectors. The function `c()` will concatenate objects into a vector. 
+
+```{r}
+vec <- c(x, y, z)
+vec
+# check the length of vec
+length(vec)
+# check the class of vec
+class(vec)
+```
+
+What happened here? Vectors must contain the same type of data, so `x`, `y`, and `z` were all converted to character values. 
+
+```{r}
+vec_num <- c(6, 1, -3)
+class(vec_num)
+vec_log <- c(TRUE, TRUE, FALSE)
+class(vec_log)
+```
+
+To extract one or multiple values in a vector we use the indices of those values in square brackets. 
+
+```{r}
+# get the first value of vec
+vec[1]
+# get the third value of vec_num
+vec_num[3]
+# get the first through second values of vec_log
+vec_log[1:2]
+# get the first and third values of vec
+vec[c(1, 3)]
+```
+
+We can also perform mathematical and logical operations on vectors. 
+
+```{r}
+# add 4 to each value of vec_num
+vec_num + 4
+# check each element of vec_num to see if it is equal to 1
+vec_num == 1
+# check each element of vec_num to see if it is less or equal to 5
+vec_num <= 5
+# subset based on logical vector 
+vec_num[vec_num <= 5]
+# check each element of vec to see if it is the string "hello" 
+vec == "hello"
+```
+
+Another data type that holds multiple values in R is a list. A list can take different data types and can include a name for each value. There are multiple ways to subset from a list, either double square brackets with an index or the `$` operator with the object name. 
+
+```{r}
+my_list <- list("number" = 5, letter = "a", logical = TRUE)
+my_list[[1]]
+my_list$letter
+```
+
+It is possible to keep adding elements to a list
+```{r}
+my_list$vec_char <- vec
+my_list$vec_num <- vec_num
+my_list$vec_log <- vec_log
+
+# what does our list look like now?
+my_list
+```
+
+What about our `otus` and `covariates` objects? What data type are they? 
+
+```{r}
+class(otus)
+class(covariates)
+```
+
+A `data.frame` is a list that is made up of multiple vectors (representing variables) where each vector must be the same length (which can be verified with the `length()` function), but they may be of different data types. 
+
+```{r}
+covariates$Month
+length(covariates$Month)
+class(covariates$Month)
+covariates$Season
+length(covariates$Season)
+class(covariates$Season)
+
+otus$JPA_Jan[1:10]
+length(otus$JPA_Jan)
+class(otus$JPA_Jan)
+otus$JPA_Feb[1:10]
+length(otus$JPA_Feb)
+class(otus$JPA_Feb)
+```
+
+Because a data frame has rows and columns, if we want to subset from it we need to use a square bracket with multiple indices separated by commas. 
+
+```{r}
+# get the 1st observation of the 3rd variable 
+covariates[1, 3]
+# get the 2nd observation of the last three variables 
+ncol(covariates)
+covariates[2, 3:5]
+# get all observations for the 1st variable 
+covariates[, 1]
+# get the 10th observation for all variables 
+covariates[10, ]
+# get the 4th observation of the variable "Season" 
+covariates$Season[4]
+```
+
+Exercise: Extract the value from the 5th observation of `covariates` for the variable "Month." 
+
+```{r}
+covariates$Month[5]                                                                                   
+```
+
+Challenge exercise: What is the count of "Bacteria;Acidobacteria;Holophagae;Holophagales;Holophagaceae;Geothrix" for the first observation listed in the `covariates` data frame collected in "Summer"? 
+
+```{r}
+covariates$Season # note that the 3rd observation is the first one from the summer
+otus["Bacteria;Acidobacteria;Holophagae;Holophagales;Holophagaceae;Geothrix", 3]
+```
+
+Answer: there are $0$ counts of "Bacteria;Acidobacteria;Holophagae;Holophagales;Holophagaceae;Geothrix" for the first observation from the summer.

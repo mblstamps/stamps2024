@@ -1,0 +1,225 @@
+---
+title: "Introduction to R, STAMPS 2024"
+author: "Maria Valdez C., Sarah Teichman, Shirley Mathur"
+date: "2024-07-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Organization
+
+Welcome to R! The goal of this lesson is to level up your R skills, whether this is your first time using it or you're already a pro. This lesson is made up of five tutorials, each in a different .Rmd file within the "tutorials" folder. This document will be your guide, describing each tutorial and giving one or two practice questions for each topic. The tutorials build on each other, so start at the beginning if you're new to R, and if not then choose the first one with material new to you. We suggest that if you think you know the material from a tutorial, go through the exercises in this file anyway to shake the cobwebs off. 
+
+## Tutorial 1: Data and data types
+
+This tutorial provides an introduction to reading data into R and figuring out the basics about the data frame. It also contains an introduction to some of the basic data types in R (values, vectors, lists) and how to subset them. 
+
+Exercises:
+
+1. Read in the "covariates" data set in the "data" folder. How many observations are there? What is the name of the third variable in the dataset? 
+```{r}
+covariates <- read.csv("data/covariates.txt", sep = "\t")
+nrow(covariates)
+names(covariates)[3]
+```
+
+2. What is the third observation for the second variable in the "covariates" dataset? 
+```{r}
+covariates[3, 2]
+```
+
+## Tutorial 2: Using and writing functions
+
+This tutorial describes what an R function is, how to figure out which arguments to use in a function, and how to write your own function. 
+
+Exercises:
+
+1. Randomly draw three values from the vector `covariates$SampleName` with the function `sample()`. Check out the documentation for this function by putting `?sample` in the console. Do this again including an additional argument that is not required for `sample()`. 
+
+```{r}
+sample(covariates$SampleName, 3) # draw 3 values from the vector 
+sample(covariates$SampleName, 3, replace = TRUE) # draw 3 values from the vector, but now sampling with replacement
+sample(covariates$SampleName, 3, prob = c(rep(0.4, 2), rep(0.02, 10))) # draw 3 values, with high probabilities of sampling the first two observations and low probabilities for the other observations
+```
+
+2. Consider this function for calculating the centered log ratio (CLR) of a vector. 
+
+```{r}
+clr <- function(counts) {    
+  transformed <- log(counts) - mean(log(counts))
+  return(transformed)
+}
+```
+
+Notice what happens when we include a $0$ in our vector `counts`.
+
+```{r}
+clr(c(1, 5, 4))
+clr(c(1, 5, 0, 4))
+```
+
+Turns out we can't take the log of $0$! Rewrite this to include an optional argument `pseudo` that is set to $0.5$ by default, that will add this quantity to all $0$ values in the input `counts`.
+
+```{r, eval = FALSE}
+clr_with_pseudo <- function(counts, pseudo = 0.05) { # add optional argument
+  new_counts <- counts
+  new_counts[new_counts == 0] <- pseudo # add pseudocounts to all 0 counts 
+  transformed <- log(new_counts) - mean(log(new_counts))
+  return(transformed)
+}
+
+clr_with_pseudo(c(1, 5, 4))
+clr_with_pseudo(c(1, 5, 0, 4))
+```
+
+## Tutorial 3: Phyloseq 
+
+Phyloseq is an R package that can help you organize and manipulate microbiome data. A phyloseq object consists of three linked data tables that hold the sample data, otu data, and taxonomy data, for a specific data set. This tutorial introduces the structure of a phyloseq object, gives some examples of data manipulation and visualization with a phyloseq object, and shows you how to make your own. 
+
+Exercises: Read in the `phyloseq` object below. Make a smaller `phyloseq` object that aggregates counts at the class level and only includes classes in the phylum *Cyanobacteria*. How many classes are remaining?
+
+```{r}
+phyloseq_obj <- readRDS("data/phyloseq_obj.rds")
+phylo_class <- tax_glom(phyloseq_obj, taxrank = "class")
+phylo_class_cyano <- subset_taxa(phylo_class, phylum == "Cyanobacteria")
+tax_table(phylo_class_cyano)
+```
+
+We only have two classes remaining, "Cyanobacteria" and "class_NA". 
+
+## Tutorial 4: Data manipulation with the tidyverse
+
+In this tutorial, we go through how to clean and reorganize data frames through the `dplyr` package. Do you know how to order a data set by the entries of a column with `arrange()` or how to introduce new variables into the data set with `mutate()`?
+
+Exercises: 
+
+1. Read the "phylum_data" file in the "data" folder and create a new data frame in which you maintain only the "Location", "Month", "Season", "Type" and the taxon "Acidobacteria". For this taxon, preserve in the data frame only the positive counts, and obtain the log counts. Order the rows by these log-counts.
+
+```{r, eval = FALSE}
+phylum_data <- read.csv("data/phylum_data.txt", sep = "\t", row.names = 1, header = T)
+
+New_phylum_data <- phylum_data %>%
+  select(Location, Month, Season, Type, Acidobacteria) %>%
+  filter(Acidobacteria > 0) %>%
+  mutate(log_Acidobacteria = log(Acidobacteria)) %>%
+  arrange(log_Acidobacteria)
+```
+
+2. Using the same "phylum_data" data frame, create a new data frame showing the added counts of "Chlamydiae" by Location. 
+
+```{r}
+  Chlam_Loc_phylum_data <- phylum_data %>%
+    group_by(Location) %>%
+    summarise(Chlamydiae = sum(Chlamydiae))
+```
+ 
+## Tutorial 5: Plotting and pivoting tables with the tidyverse 
+
+The tidyverse includes the `pivot_wider` and `pivot_longer` functions that are useful
+for modifying data tables. These can be especially helpful to process data prior to plotting.
+The `ggplot2` package in the tidyverse provides extensive functionality to make various
+type of plots from your data.
+
+Exercises:
+
+1. Use the `pivot_longer` and `dplyr` functions to make a long data table from the
+`phylum_data.txt` data that has a `taxa` column and a corresponding `count` column
+for the count of a taxa in a particular sample.
+
+```{r}
+phylum_data <- read_tsv("data/phylum_data.txt")
+
+phylum_data_long <- phylum_data %>% 
+  pivot_longer(
+    !c(Sample, Location, Month, Season, Type), #pivot all the rows except for the sample metadata
+    names_to = "taxa", values_to = "count"
+  )
+phylum_data_long
+```
+
+2. Use the table you made in the previous exericse to make a plot of the taxa counts for each taxa in the `phylum_data` table that is faceted by season and location, so that each plot show the summarised counts of each taxa for each season across each location.
+
+```{r}
+phylum_summary <- phylum_data_long %>%
+  group_by(taxa, Location, Season) %>%
+  summarise(count = sum(count))
+
+phylum_summary %>% 
+  ggplot(aes(x = taxa, y = count, fill = Location)) +
+  geom_col()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  facet_grid(Location ~ Season) +
+  labs(title = "Counts of Taxa", x = "Taxa", y = "Count")
+```
+
+3. Use the `phylum_data.txt` data to make a scatter plot of how the raw counts of Proteobacteria and
+Cyanobacteria vary together.
+
+```{r}
+phylum_data %>% ggplot(aes(x = Proteobacteria, y = Cyanobacteria)) +
+  geom_point()
+```
+
+If you are able to complete the above exercises, you can try the bonus challenge in tutorial 5!
+
+## Optional bonus challenge!
+
+Now that you have all of these R skills, you can work on putting them together to code more independently. The goal of this challenge is to make a different type of plot to show distances between samples that is not a PCoA plot. Specifically, we want to remake the plot below: 
+
+```{r}
+my_plot <- readRDS("figures/alternate_distance_plot.rds")
+my_plot
+```
+
+In this plot, we have boxplots that represent the spread of Bray-Curtis distances between samples from different seasons, samples from summer, and samples from winter. You can use `phyloseq` to calculate the Bray-Curtis distances between samples, various functions from `dplyr` to organize your data, and `ggplot` to plot your data. 
+
+If you'd like to decide how to proceed, try whatever you think could work! There are many ways to approach this task. If you'd like this task to be broken down into smaller pieces, you can use the outline below. 
+
+1) Use the phyloseq object `phyloseq_obj` and the `distance` function from the `phyloseq` package to calculate Bray-Curtis distances between points and extract the distance matrix.
+
+```{r}
+  phyloseq_obj <- readRDS("data/phyloseq_obj.rds")
+  bray_distance <- as.matrix(phyloseq::distance(phyloseq_obj, "bray"))
+```
+
+2) From this distance matrix, extract small sub-matrices that include distances just for samples from the summer, just for samples from the winter, and distances between samples from the summer and samples from the winter. 
+
+```{r}
+season_vec <- unlist(phyloseq::sample_data(phyloseq_obj)[, 3])
+
+summer_dist <- bray_distance[season_vec == "Summer", season_vec == "Summer"]
+winter_dist <- bray_distance[season_vec == "Winter", season_vec == "Winter"]
+between_dist <- bray_distance[season_vec == "Summer", season_vec == "Winter"]
+```
+
+3) Turn each of these distance matrices into a vector, making sure not to double count distances (you want to count the distance between summer sample 1 and summer sample 2 once, although it appears in your distance matrix twice) and to remove distances between a sample and itself. 
+
+```{r}
+summer_vec <- as.vector(summer_dist[upper.tri(summer_dist)])
+winter_vec <- as.vector(winter_dist[upper.tri(winter_dist)])  
+between_vec <- as.vector(between_dist)  
+```
+
+4) Make a dataframe with one variable that holds the distances and one variable that holds the type of distance (is it a distance between two summer samples, a distance between two winter samples, or a distance between one summer and one winter sample?). 
+
+```{r}
+bc_df <- data.frame(
+  dissim = c(summer_vec, winter_vec, between_vec),
+  type = c(rep("Summer", length(summer_vec)),
+           rep("Winter", length(winter_vec)),
+           rep("Between season", length(between_vec))))
+```
+
+5) Use that dataframe to make boxplots with ggplot. Make sure to include an interpretable y-axis label.
+
+```{r}
+my_plot <- ggplot(data = bc_df, aes(x = type, y = dissim)) + 
+  geom_boxplot() + 
+  ylim(c(0, 1)) + 
+  labs(x = "", y = "Bray-Curtis dissimilarity") 
+
+my_plot
+```
